@@ -147,7 +147,7 @@ export function HomeLatestReleasesSection() {
     <section
       ref={sectionRef}
       id="lancamentos"
-      className="relative flex w-full flex-col justify-center overflow-hidden border-t border-white/5 bg-[var(--color-surface)] py-20 md:py-28"
+      className="relative scroll-mt-24 flex w-full flex-col justify-center overflow-hidden border-t border-white/5 bg-[var(--color-surface)] py-20 md:py-28"
     >
       <div className="container mx-auto mb-10 px-6 md:mb-14">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">

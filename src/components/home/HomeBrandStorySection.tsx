@@ -58,11 +58,11 @@ function getScrubVideoSource() {
 
   const memory =
     (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
-  const wideScreen = window.matchMedia("(min-width: 1280px)").matches;
+  const wideScreen = window.matchMedia("(min-width: 1440px)").matches;
   const precisePointer = window.matchMedia("(pointer: fine)").matches;
-  const enoughCpu = navigator.hardwareConcurrency >= 8;
+  const enoughCpu = navigator.hardwareConcurrency >= 10;
 
-  if (wideScreen && precisePointer && enoughCpu && memory >= 6) {
+  if (wideScreen && precisePointer && enoughCpu && memory >= 8) {
     return "/media/video/brand-story-scrub-hq.mp4";
   }
 
@@ -107,9 +107,8 @@ export function HomeBrandStorySection() {
             trigger: section,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.9,
+            scrub: true,
             invalidateOnRefresh: true,
-            fastScrollEnd: true,
           },
         });
 
@@ -200,13 +199,21 @@ export function HomeBrandStorySection() {
           observer.disconnect();
         }
       },
-      { threshold: 0.01, rootMargin: "50% 0px" },
+      { threshold: 0.01, rootMargin: "120% 0px" },
     );
 
     observer.observe(section);
 
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoadVideo) return;
+
+    video.preload = "auto";
+    video.load();
+  }, [shouldLoadVideo, videoSrc]);
 
   return (
     <section
@@ -217,7 +224,7 @@ export function HomeBrandStorySection() {
       <div ref={stageRef} className="sticky top-0 h-screen w-full">
         <video
           ref={videoRef}
-          preload="metadata"
+          preload="auto"
           muted
           playsInline
           disablePictureInPicture

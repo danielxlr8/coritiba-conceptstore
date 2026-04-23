@@ -32,6 +32,7 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
   const lastScrollYRef = useRef(0);
   const isPlayingRef = useRef(false);
   const isPlayPendingRef = useRef(false);
+  const isUnlockedRef = useRef(false);
   const inSectionRef = useRef(false);
   const disabledRef = useRef(false);
 
@@ -74,6 +75,35 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
       })
       .finally(() => {
         isPlayPendingRef.current = false;
+      });
+  }, []);
+
+  const unlockAudio = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || isUnlockedRef.current) return;
+
+    const playResult = audio.play();
+
+    if (!playResult || typeof playResult.then !== "function") {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 0;
+      isUnlockedRef.current = true;
+      isPlayingRef.current = false;
+      return;
+    }
+
+    playResult
+      .then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0;
+        isUnlockedRef.current = true;
+        isPlayingRef.current = false;
+      })
+      .catch(() => {
+        isUnlockedRef.current = false;
+        isPlayingRef.current = false;
       });
   }, []);
 
@@ -149,6 +179,24 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
   }, [stopLoop]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || disabledRef.current) return;
+
+    const handleFirstGesture = () => {
+      unlockAudio();
+    };
+
+    window.addEventListener("pointerdown", handleFirstGesture, { passive: true });
+    window.addEventListener("keydown", handleFirstGesture, { passive: true });
+    window.addEventListener("wheel", handleFirstGesture, { passive: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", handleFirstGesture);
+      window.removeEventListener("keydown", handleFirstGesture);
+      window.removeEventListener("wheel", handleFirstGesture);
+    };
+  }, [unlockAudio]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const onVisibility = () => {
@@ -181,9 +229,11 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
       if (disabledRef.current || !inSectionRef.current) return;
       if (Math.abs(event.deltaY) < VELOCITY_THRESHOLD) return;
 
+      attemptPlay();
       stampScroll();
+      ensureLoop();
     },
-    [stampScroll],
+    [attemptPlay, ensureLoop, stampScroll],
   );
 
   const handleScroll = useCallback(() => {
@@ -201,10 +251,11 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
     (event: KeyboardEvent) => {
       if (!SCROLL_KEYS.has(event.key)) return;
 
+      attemptPlay();
       stampScroll();
       ensureLoop();
     },
-    [ensureLoop, stampScroll],
+    [attemptPlay, ensureLoop, stampScroll],
   );
 
   useEffect(() => {

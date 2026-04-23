@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useLocale, type Locale } from "@/components/providers/LocaleProvider";
@@ -86,6 +86,26 @@ export function HomeHeroSection() {
   const { shouldReduceMedia } = useMediaPreferences();
   const { locale, setLocale } = useLocale();
   const copy = heroCopy[locale];
+
+  const scrollToCampaign = useCallback(() => {
+    const releasesSection = document.getElementById("lancamentos");
+    if (!releasesSection) return;
+
+    const lenis = window.__lenis;
+    if (lenis) {
+      lenis.scrollTo(releasesSection, {
+        offset: -88,
+        duration: 1.1,
+        lock: true,
+      });
+      return;
+    }
+
+    releasesSection.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, []);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -295,9 +315,7 @@ export function HomeHeroSection() {
                 className="hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/70 border border-transparent hover:border-[var(--color-primary)]/30 transition-all duration-300"
                 onClick={() => {
                   triggerWithDelay(() => {
-                    document
-                      .getElementById("featured-drop-cards")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    scrollToCampaign();
                   });
                 }}
               >
