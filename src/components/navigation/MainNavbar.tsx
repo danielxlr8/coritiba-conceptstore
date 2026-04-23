@@ -481,7 +481,7 @@ export function MainNavbar() {
                   <div className="w-full h-56 relative overflow-hidden">
                     <HoverPreviewVideo
                       videoSrc="/media/video/casual.mp4"
-                      posterSrc="/imagens/casual.webp"
+                      posterSrc="/imagens/Casual.webp"
                       posterClassName="opacity-80 object-top"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-black/40 to-transparent pointer-events-none" />
