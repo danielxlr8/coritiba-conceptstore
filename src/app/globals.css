@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #60e861;
+
+  --color-background-dark: #050505;
+
+  --color-surface: #111111;
+
+  --color-surface-hover: #1a1a1a;
+
+  --color-text-dark: #ffffff;
+
+  --color-text-muted: #888888;
+
+  --font-sans: var(--font-saira);
+
+  --font-heading: var(--font-saira-condensed);
+
+  --ease-premium: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --ease-fluid: cubic-bezier(0.83, 0, 0.17, 1);
+
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+:root {
+  --background: var(--color-background-dark);
+
+  --foreground: var(--color-text-dark);
+}
+
+body {
+  background: var(--background);
+
+  color: var(--foreground);
+
+  font-family: var(--font-sans);
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Taste-skill specific typography classes */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Advanced Fluid Typography */
+
+  .text-fluid-h1 {
+    font-size: clamp(3rem, 10vw, 12rem);
+
+    line-height: 1.0;
+
+    letter-spacing: -0.02em;
+  }
+
+  .text-fluid-h2 {
+    font-size: clamp(2rem, 6vw, 6rem);
+
+    line-height: 0.9;
+
+    letter-spacing: -0.01em;
+  }
+}
+
+
+
+/* ─── News Ticker: scroll infinito com CSS puro ──────────── */
+.ticker-track {
+  animation: ticker-scroll 35s linear infinite;
+  contain: layout;
+}
+
+/* Pausa ao hover para leitura */
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); } /* Move 1/3 do total (o array é 3x) */
+}
+
+/* Hide scrollbar for clean look */
+
+::-webkit-scrollbar {
+  width: 0px;
+
+  background: transparent;
+}
+
+/* Hide scrollbar utility (for product thumbnail strip) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─── Premium Carousel Nav Buttons ─── Nike/Apple-level ──────── */
+.releases-nav-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition:
+    border-color 0.4s ease,
+    background 0.4s ease,
+    color 0.4s ease,
+    box-shadow 0.4s ease,
+    transform 0.15s ease;
+  outline: none;
+  overflow: hidden;
+}
+
+/* Inner ring glow effect */
+.releases-nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(96, 232, 97, 0) 0%,
+    rgba(96, 232, 97, 0) 40%,
+    rgba(96, 232, 97, 0.3) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+/* Hover — neon glow */
+.releases-nav-btn:hover:not(:disabled) {
+  border-color: rgba(96, 232, 97, 0.5);
+  background: rgba(96, 232, 97, 0.06);
+  color: #60e861;
+  box-shadow:
+    0 0 20px rgba(96, 232, 97, 0.12),
+    0 0 40px rgba(96, 232, 97, 0.06);
+}
+
+.releases-nav-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+/* Active / Pressed */
+.releases-nav-btn:active:not(:disabled) {
+  transform: scale(0.92);
+  border-color: rgba(96, 232, 97, 0.7);
+  background: rgba(96, 232, 97, 0.1);
+}
+
+/* Focus visible (keyboard) */
+.releases-nav-btn:focus-visible {
+  outline: 2px solid rgba(96, 232, 97, 0.6);
+  outline-offset: 3px;
+}
+
+/* HAPTIC VIBRATION ANIMATION */
+@keyframes shake-vibrate {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(-2px, 1px) scale(1.05); }
+  40% { transform: translate(2px, -1px) scale(1.05); }
+  60% { transform: translate(-2px, -1px) scale(1.05); }
+  80% { transform: translate(2px, 1px) scale(1.05); }
+}
+
+.animate-shake-vibrate {
+  animation: shake-vibrate 0.2s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Disabled state */
+.releases-nav-btn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.05);
+  background: transparent;
+}
+
+/* Mobile: slightly smaller buttons */
+@media (max-width: 640px) {
+  .releases-nav-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* ─── Soccer Ball Spin Animation ────────────────────────── */
+.ball-spin {
+  animation: ball-roll 4s linear infinite;
+  display: inline-block;
+}
+
+.newsletter-input:-webkit-autofill,
+.newsletter-input:-webkit-autofill:hover,
+.newsletter-input:-webkit-autofill:focus,
+.newsletter-input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-primary);
+  caret-color: var(--color-primary);
+  border-radius: 0;
+  background-color: transparent !important;
+  background-clip: text;
+  -webkit-background-clip: text;
+  box-shadow: 0 0 0 1000px #000 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #000 inset !important;
+  transition: background-color 99999s ease-in-out 0s, color 99999s ease-in-out 0s;
+  font: inherit;
+}
+
+@keyframes ball-roll {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ─── WaveText Mode B: CSS wave per letter — zero JS overhead ──── */
+@keyframes wave-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+
+@keyframes checkout-autofill-start {
+  from {}
+  to {}
+}
+
+.checkout-input:-webkit-autofill,
+.checkout-input:-webkit-autofill:hover,
+.checkout-input:-webkit-autofill:focus,
+.checkout-input:-webkit-autofill:active {
+  animation-name: checkout-autofill-start;
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1000px #111111 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #111111 inset !important;
+  transition: background-color 99999s ease-in-out 0s, color 99999s ease-in-out 0s;
+}
