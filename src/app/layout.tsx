@@ -51,6 +51,16 @@ const sairaCondensed = localFont({
 export const metadata: Metadata = {
   title: "Coxa Store | E-commerce Premium",
   description: "A paixao do torcedor no e-commerce mais moderno.",
+  icons: {
+    icon: [
+      {
+        url: "/imagens/favicon.png",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/imagens/favicon.png",
+    apple: "/imagens/favicon.png",
+  },
 };
 
 export default function RootLayout({
