@@ -18,10 +18,7 @@ import {
 } from "lucide-react";
 import gsap from "gsap";
 import { SiteFooter } from "@/components/navigation/SiteFooter";
-import {
-  useLocale,
-  type Locale,
-} from "@/components/providers/LocaleProvider";
+import { useLocale, type Locale } from "@/components/providers/LocaleProvider";
 import { MainNavbar } from "@/components/navigation/MainNavbar";
 import { ProductCard } from "@/components/commerce/catalog/ProductCard";
 import { ProductShareModal } from "@/components/commerce/catalog/ProductShareModal";
@@ -90,7 +87,7 @@ const productPageaopy: Record<
   pt: {
     home: "Home",
     soldBy: "Vendido por",
-    member: "Socio aoxa",
+    member: "Socio Coxa",
     memberOff: "ate 20% OFF",
     trending: "Tendencia!",
     trendingDescription: "Este artigo tem muita procura.",
@@ -116,7 +113,7 @@ const productPageaopy: Record<
   en: {
     home: "Home",
     soldBy: "Sold by",
-    member: "aoxa Member",
+    member: "Coxa Member",
     memberOff: "up to 20% OFF",
     trending: "Trending!",
     trendingDescription: "This item is in high demand.",
@@ -142,7 +139,7 @@ const productPageaopy: Record<
   es: {
     home: "Home",
     soldBy: "Vendido por",
-    member: "Socio aoxa",
+    member: "Socio Coxa",
     memberOff: "hasta 20% OFF",
     trending: "Tendencia!",
     trendingDescription: "Este articulo tiene mucha demanda.",
@@ -274,7 +271,9 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const isFavorite = favoriteItems.some((favorite) => favorite.id === product.id);
+  const isFavorite = favoriteItems.some(
+    (favorite) => favorite.id === product.id,
+  );
 
   const [isMagnified, setIsMagnified] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
@@ -572,7 +571,9 @@ export default function ProductPage() {
                   {priceFormatted}
                 </span>
               </div>
-              <p className="mb-3 text-sm text-white/50">{product.installments}</p>
+              <p className="mb-3 text-sm text-white/50">
+                {product.installments}
+              </p>
               <div className="m-0 flex items-center gap-2 rounded border border-[#115740] bg-[#115740]/40 px-4 py-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#60E861]">
                   {copy.member}
@@ -689,7 +690,9 @@ export default function ProductPage() {
                 >
                   <div className="space-y-4 text-sm leading-relaxed text-white/60">
                     <p>{product.description}</p>
-                    {product.descriptionExtra && <p>{product.descriptionExtra}</p>}
+                    {product.descriptionExtra && (
+                      <p>{product.descriptionExtra}</p>
+                    )}
                     <p className="mt-4 text-base font-semibold italic text-white">
                       {product.tagline}
                     </p>
@@ -868,11 +871,16 @@ export default function ProductPage() {
 
         <div className="mt-24 border-t border-white/10 pt-16">
           <h2 className="mb-10 text-2xl font-black font-heading uppercase tracking-tight text-white md:text-3xl">
-            {copy.related} <span className="text-[var(--color-primary)]">.</span>
+            {copy.related}{" "}
+            <span className="text-[var(--color-primary)]">.</span>
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} className="h-full w-full" />
+              <ProductCard
+                key={item.id}
+                product={item}
+                className="h-full w-full"
+              />
             ))}
           </div>
         </div>
@@ -979,15 +987,11 @@ export default function ProductPage() {
         isOpen={isSizeGuideOpen}
         onClose={() => setIsSizeGuideOpen(false)}
         productType={
-          product.name.toLowerCase().includes("jogador") ? "jogador" : "torcedor"
+          product.name.toLowerCase().includes("jogador")
+            ? "jogador"
+            : "torcedor"
         }
       />
     </main>
   );
 }
-
-
-
-
-
-
