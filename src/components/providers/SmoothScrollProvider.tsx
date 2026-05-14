@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "@studio-freight/lenis";
+import { ScrollTrigger } from "@/lib/gsap";
 
 declare global {
   interface Window {
@@ -24,6 +25,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
       touchMultiplier: 2,
     });
     window.__lenis = lenis;
+    lenis.on("scroll", ScrollTrigger.update);
 
     const previousScrollRestoration =
       typeof window.history.scrollRestoration === "string"
@@ -55,6 +57,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
       cancelAnimationFrame(rafId);
+      lenis.off("scroll", ScrollTrigger.update);
       lenis.stop();
       lenis.destroy();
       delete window.__lenis;

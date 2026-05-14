@@ -76,7 +76,7 @@ const navbarCopy: Record<
       services: "Servi\u00E7os e Guias",
       discoverSize: "Descobrir Tamanho",
       trackDelivery: "Rastrear Entrega",
-      becomeMember: "Seja S\u00F3cio Coxa",
+      becomeMember: "S\u00F3cio Coxa",
       returns: "Devolu\u00E7\u00F5es Premium",
     },
   },

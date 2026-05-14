@@ -287,7 +287,7 @@ export function SiteFooter() {
                 {shouldLoadYoutube ? (
                   <iframe
                     className="h-full w-full"
-                    src="https://www.youtube.com/embed/VcXcceacCng?si=0KeojgR0QBtXapZ9"
+                    src="https://www.youtube.com/embed/mESmNnneOs0?si=o-R2sW7aU4Uk6tPG"
                     title="Coritiba Bastidores"
                     frameBorder="0"
                     loading="lazy"

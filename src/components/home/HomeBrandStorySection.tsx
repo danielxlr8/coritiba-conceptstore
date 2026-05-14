@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useLocale, type Locale } from "@/components/providers/LocaleProvider";
 import { useScrubAudio } from "@/hooks/useScrubAudio";
+
+const SCRUB_POSTER_SRC = "/images/home/brand-story-scrub-poster.webp";
 
 const brandStoryCopy: Record<
   Locale,
@@ -78,12 +81,15 @@ export function HomeBrandStorySection() {
   const text2Ref = useRef<HTMLDivElement>(null);
   const text3Ref = useRef<HTMLDivElement>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [scrubReady, setScrubReady] = useState(false);
   const [videoSrc] = useState(getScrubVideoSource);
   const copy = brandStoryCopy[locale];
 
   useScrubAudio(sectionRef);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!scrubReady) return;
+
     const section = sectionRef.current;
     const stage = stageRef.current;
     const video = videoRef.current;
@@ -93,16 +99,60 @@ export function HomeBrandStorySection() {
 
     if (!section || !stage || !video || !text1 || !text2 || !text3) return;
 
-    let removeMetadataListener: (() => void) | undefined;
-
     const ctx = gsap.context(() => {
-      const build = () => {
-        const duration = Math.max((video.duration || 15) - 0.001, 0.001);
-        const sectionHeightVh = Math.max(220, Math.round(duration * 18));
-        section.style.minHeight = `${sectionHeightVh}vh`;
+      const duration = Math.max((video.duration || 15) - 0.001, 0.001);
+      const sectionHeightVh = Math.max(220, Math.round(duration * 18));
+      section.style.minHeight = `${sectionHeightVh}vh`;
 
-        const timeline = gsap.timeline({
-          defaults: { ease: "none" },
+      gsap.set(video, { currentTime: 0, opacity: 0.9 });
+      gsap.set([text1, text2, text3], { opacity: 0, y: 40 });
+
+      const timeline = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      timeline
+        .fromTo(
+          video,
+          { currentTime: 0 },
+          { currentTime: duration, duration: 1.1 },
+          0,
+        )
+        .fromTo(
+          text1,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.15 },
+          0.05,
+        )
+        .to(text1, { opacity: 0, y: -40, duration: 0.15 }, 0.25)
+        .fromTo(
+          text2,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.15 },
+          0.4,
+        )
+        .to(text2, { opacity: 0, y: -40, duration: 0.15 }, 0.6)
+        .fromTo(
+          text3,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.15 },
+          0.75,
+        )
+        .to(text3, { opacity: 0, y: -40, duration: 0.15 }, 0.95);
+
+      gsap.fromTo(
+        stage,
+        { scale: 1.02 },
+        {
+          scale: 1,
+          ease: "none",
           scrollTrigger: {
             trigger: section,
             start: "top top",
@@ -110,83 +160,20 @@ export function HomeBrandStorySection() {
             scrub: true,
             invalidateOnRefresh: true,
           },
-        });
+        },
+      );
 
-        timeline.fromTo(
-          video,
-          { currentTime: 0 },
-          { currentTime: duration || video.duration, duration: 1.1 },
-          0,
-        );
-
-        timeline.fromTo(
-          video,
-          { opacity: 0.08 },
-          { opacity: 0.9, duration: 1 },
-          0,
-        );
-
-        timeline.fromTo(
-          text1,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.15 },
-          0.05,
-        )
-          .to(text1, { opacity: 0, y: -40, duration: 0.15 }, 0.25)
-          .fromTo(
-            text2,
-            { opacity: 0, y: 40 },
-            { opacity: 1, y: 0, duration: 0.15 },
-            0.4,
-          )
-          .to(text2, { opacity: 0, y: -40, duration: 0.15 }, 0.6)
-          .fromTo(
-            text3,
-            { opacity: 0, y: 40 },
-            { opacity: 1, y: 0, duration: 0.15 },
-            0.75,
-          )
-          .to(text3, { opacity: 0, y: -40, duration: 0.15 }, 0.95);
-
-        gsap.fromTo(
-          stage,
-          { scale: 1.02 },
-          {
-            scale: 1,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top top",
-              end: "bottom bottom",
-              scrub: true,
-              invalidateOnRefresh: true,
-            },
-          },
-        );
-
-        requestAnimationFrame(() => {
-          gsap.delayedCall(0, () => {
-            ScrollTrigger.refresh();
-          });
-        });
-      };
-
-      if (video.readyState >= 1) {
-        build();
-      } else {
-        const handleMetadata = () => build();
-        video.addEventListener("loadedmetadata", handleMetadata, { once: true });
-        removeMetadataListener = () =>
-          video.removeEventListener("loadedmetadata", handleMetadata);
-      }
+      requestAnimationFrame(() => {
+        window.__lenis?.resize?.();
+        ScrollTrigger.refresh();
+      });
     }, sectionRef);
 
     return () => {
-      removeMetadataListener?.();
       ctx.revert();
       section.style.minHeight = "220vh";
     };
-  }, []);
+  }, [scrubReady]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -199,7 +186,7 @@ export function HomeBrandStorySection() {
           observer.disconnect();
         }
       },
-      { threshold: 0.01, rootMargin: "120% 0px" },
+      { threshold: 0.01, rootMargin: "220% 0px" },
     );
 
     observer.observe(section);
@@ -211,8 +198,50 @@ export function HomeBrandStorySection() {
     const video = videoRef.current;
     if (!video || !shouldLoadVideo) return;
 
+    let cancelled = false;
+    let hasMarkedReady = false;
+    let readyFrame: number | undefined;
+
+    const markReady = () => {
+      if (
+        cancelled ||
+        hasMarkedReady ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+      ) {
+        return;
+      }
+
+      hasMarkedReady = true;
+      video.pause();
+      video.currentTime = 0;
+
+      readyFrame = window.requestAnimationFrame(() => {
+        if (!cancelled) {
+          setScrubReady(true);
+        }
+      });
+    };
+
+    setScrubReady(false);
+    video.addEventListener("loadeddata", markReady, { once: true });
+    video.addEventListener("canplay", markReady, { once: true });
     video.preload = "auto";
+    video.src = videoSrc;
     video.load();
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      markReady();
+    }
+
+    return () => {
+      cancelled = true;
+      if (readyFrame) {
+        window.cancelAnimationFrame(readyFrame);
+      }
+
+      video.removeEventListener("loadeddata", markReady);
+      video.removeEventListener("canplay", markReady);
+    };
   }, [shouldLoadVideo, videoSrc]);
 
   return (
@@ -222,25 +251,41 @@ export function HomeBrandStorySection() {
       style={{ minHeight: "220vh" }}
     >
       <div ref={stageRef} className="sticky top-0 h-screen w-full">
+        <div
+          aria-hidden="true"
+          className={[
+            "absolute inset-0 transition-opacity duration-700 ease-out",
+            scrubReady ? "opacity-0" : "opacity-100",
+          ].join(" ")}
+        >
+          <Image
+            src={SCRUB_POSTER_SRC}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/55" />
+        </div>
+
         <video
           ref={videoRef}
-          preload="auto"
+          preload="none"
           muted
           playsInline
           disablePictureInPicture
-          className="absolute inset-0 h-full w-full object-cover"
+          poster={SCRUB_POSTER_SRC}
+          className={[
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out",
+            scrubReady ? "opacity-[0.9]" : "opacity-0",
+          ].join(" ")}
           style={{
-            opacity: 0.85,
             pointerEvents: "none",
             transform: "translateZ(0)",
             willChange: "transform",
             contain: "layout paint size",
           }}
-        >
-          {shouldLoadVideo && (
-            <source src={videoSrc} type="video/mp4" />
-          )}
-        </video>
+        />
 
         <div
           className="absolute inset-0 z-10 pointer-events-none"

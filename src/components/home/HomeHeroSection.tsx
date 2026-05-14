@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useLocale, type Locale } from "@/components/providers/LocaleProvider";
@@ -13,7 +21,6 @@ import { WaveText } from "@/components/shared/WaveText";
 import { MagneticHover } from "@/components/shared/MagneticHover";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Package, ArrowRight, Wand2 } from "lucide-react";
-import { useState } from "react";
 
 const AiSizeGuideModal = dynamic(
   () =>
@@ -24,6 +31,9 @@ const AiSizeGuideModal = dynamic(
 );
 
 gsap.registerPlugin(ScrollTrigger);
+
+const HERO_POSTER_SRC = "/images/home/home-hero-video-poster.webp";
+const HERO_VIDEO_SRC = "/media/video/home-hero-background.mp4";
 
 const localeFlags: Array<{ locale: Locale; flag: string; label: string }> = [
   { locale: "pt", flag: "\u{1F1E7}\u{1F1F7}", label: "Portugu\u00EAs" },
@@ -75,15 +85,113 @@ const heroCopy: Record<
   },
 };
 
+const HeroBackgroundLayer = memo(function HeroBackgroundLayer({
+  containerRef,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+}) {
+  const posterRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { shouldReduceMedia } = useMediaPreferences();
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const poster = posterRef.current;
+
+    if (!video || shouldReduceMedia) return;
+
+    let cancelled = false;
+    let hasRevealed = false;
+    let loadTimer: number | undefined;
+    let revealFrame: number | undefined;
+
+    const revealVideo = () => {
+      if (cancelled || hasRevealed) return;
+      hasRevealed = true;
+
+      revealFrame = window.requestAnimationFrame(() => {
+        video.style.opacity = "1";
+        if (poster) poster.style.opacity = "0";
+
+        void video.play().catch(() => {
+          // Muted autoplay can still be blocked; the poster remains in place.
+        });
+      });
+    };
+
+    const startLoading = () => {
+      if (cancelled) return;
+      video.src = HERO_VIDEO_SRC;
+      video.load();
+    };
+
+    video.addEventListener("loadeddata", revealVideo, { once: true });
+    video.addEventListener("canplay", revealVideo, { once: true });
+
+    loadTimer = window.setTimeout(startLoading, 900);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(loadTimer);
+
+      if (revealFrame) {
+        window.cancelAnimationFrame(revealFrame);
+      }
+
+      video.removeEventListener("loadeddata", revealVideo);
+      video.removeEventListener("canplay", revealVideo);
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+  }, [shouldReduceMedia]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0 z-0 h-full w-full will-change-transform"
+      style={{ transform: "scale(1.2)" }}
+    >
+      <div
+        ref={posterRef}
+        aria-hidden="true"
+        className="absolute inset-0 transition-opacity duration-700 ease-out"
+      >
+        <Image
+          src={HERO_POSTER_SRC}
+          alt=""
+          fill
+          preload
+          aria-hidden="true"
+          className="object-cover"
+          sizes="100vw"
+        />
+      </div>
+
+      <video
+        ref={videoRef}
+        loop
+        muted
+        playsInline
+        preload="none"
+        poster={HERO_POSTER_SRC}
+        className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-0 transition-opacity duration-700 ease-out"
+        style={{ border: "none" }}
+        aria-hidden="true"
+      />
+
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent" />
+      <div className="absolute inset-0 z-10 bg-black/30" />
+    </div>
+  );
+});
+
 export function HomeHeroSection() {
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
   const contentGroupRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-  const backgroundVideoRef = useRef<HTMLVideoElement>(null);
   const { triggerWithDelay } = useHeroCtaAudio();
-  const { shouldReduceMedia } = useMediaPreferences();
   const { locale, setLocale } = useLocale();
   const copy = heroCopy[locale];
 
@@ -156,37 +264,7 @@ export function HomeHeroSection() {
       ctx.revert();
       ScrollTrigger.refresh();
     };
-  }, [locale]);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry) {
-          setShouldLoadVideo(entry.isIntersecting);
-        }
-      },
-      { threshold: 0.01 },
-    );
-
-    observer.observe(section);
-
-    return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    const video = backgroundVideoRef.current;
-    if (!video || !shouldLoadVideo || shouldReduceMedia) {
-      backgroundVideoRef.current?.pause();
-      return;
-    }
-
-    video.play().catch(() => {
-      // O hero continua funcional mesmo se o navegador bloquear o autoplay.
-    });
-  }, [shouldLoadVideo, shouldReduceMedia]);
 
   return (
     <section
@@ -194,45 +272,7 @@ export function HomeHeroSection() {
       className="relative w-full min-h-screen flex flex-col overflow-hidden bg-[#0A0A0A] text-white"
     >
       {/*  -� -� NATIVE VIDEO BACKGROUND  -� -� stays absolute, purely decorative */}
-      <div
-        ref={videoContainerRef}
-        className="absolute inset-0 z-0 w-full h-full will-change-transform"
-        style={{ transform: "scale(1.2)" }}
-      >
-        <Image
-          src="/images/home/home-hero-uniforms.webp"
-          alt=""
-          fill
-          priority
-          aria-hidden="true"
-          className="absolute inset-0 object-cover opacity-30"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 w-full h-full pointer-events-none bg-black">
-          <video
-            ref={backgroundVideoRef}
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            className="absolute top-1/2 left-1/2 w-full h-full -translate-x-1/2 -translate-y-1/2 object-cover"
-            style={{ border: "none" }}
-            aria-hidden="true"
-          >
-            {shouldLoadVideo && !shouldReduceMedia && (
-              <source
-                src="/media/video/home-hero-background.mp4"
-                type="video/mp4"
-              />
-            )}
-          </video>
-        </div>
-
-        {/* Gradient overlay for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent z-10" />
-        {/* Global dark tint */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
-      </div>
+      <HeroBackgroundLayer containerRef={videoContainerRef} />
 
       {/*  -� -� LAYOUT SHELL: flex-col fills the full viewport height  -� -� */}
       <div className="relative z-20 flex flex-col min-h-screen">

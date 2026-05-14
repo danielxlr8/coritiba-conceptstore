@@ -35,6 +35,7 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
   const isUnlockedRef = useRef(false);
   const inSectionRef = useRef(false);
   const disabledRef = useRef(false);
+  const tickRef = useRef<FrameRequestCallback | null>(null);
 
   const startLoop = useCallback((tick: FrameRequestCallback) => {
     if (rafIdRef.current !== null) return;
@@ -107,37 +108,40 @@ export function useScrubAudio(sectionRef: RefObject<HTMLElement | null>) {
       });
   }, []);
 
-  const tick = useCallback(() => {
-    const audio = audioRef.current;
+  useEffect(() => {
+    tickRef.current = () => {
+      const audio = audioRef.current;
 
-    if (audio && inSectionRef.current) {
-      const scrollActive =
-        Date.now() - lastScrollTimeRef.current < INERTIA_WINDOW_MS;
+      if (audio && inSectionRef.current) {
+        const scrollActive =
+          Date.now() - lastScrollTimeRef.current < INERTIA_WINDOW_MS;
 
-      if (scrollActive) {
-        attemptPlay();
+        if (scrollActive) {
+          attemptPlay();
 
-        if (isPlayingRef.current && audio.volume < 1) {
-          audio.volume = Math.min(1, audio.volume + FADE_IN_STEP);
-        }
-      } else if (isPlayingRef.current) {
-        if (audio.volume > 0) {
-          audio.volume = Math.max(0, audio.volume - FADE_OUT_STEP);
-        } else {
-          audio.pause();
-          isPlayingRef.current = false;
+          if (isPlayingRef.current && audio.volume < 1) {
+            audio.volume = Math.min(1, audio.volume + FADE_IN_STEP);
+          }
+        } else if (isPlayingRef.current) {
+          if (audio.volume > 0) {
+            audio.volume = Math.max(0, audio.volume - FADE_OUT_STEP);
+          } else {
+            audio.pause();
+            isPlayingRef.current = false;
+          }
         }
       }
-    }
 
-    if (rafIdRef.current !== null) {
-      rafIdRef.current = requestAnimationFrame(tick);
-    }
+      if (rafIdRef.current !== null && tickRef.current) {
+        rafIdRef.current = requestAnimationFrame(tickRef.current);
+      }
+    };
   }, [attemptPlay]);
 
   const ensureLoop = useCallback(() => {
-    startLoop(tick);
-  }, [startLoop, tick]);
+    if (!tickRef.current) return;
+    startLoop(tickRef.current);
+  }, [startLoop]);
 
   const resetAudio = useCallback(() => {
     const audio = audioRef.current;
