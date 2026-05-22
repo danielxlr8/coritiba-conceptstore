@@ -222,7 +222,6 @@ export function HomeBrandStorySection() {
       });
     };
 
-    setScrubReady(false);
     video.addEventListener("loadeddata", markReady, { once: true });
     video.addEventListener("canplay", markReady, { once: true });
     video.preload = "auto";

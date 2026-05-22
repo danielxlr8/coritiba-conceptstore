@@ -7,8 +7,9 @@ import { useShopStore } from "@/store/useShopStore";
 import { useEffect, useState } from "react";
 
 export function FloatingCartButton() {
-  const { cartItems, toggleCart, isCartOpen, isCartVibrating } = useShopStore();
+  const { cartItems, toggleCart, isCartOpen, lastAddedToCartAt } = useShopStore();
   const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -29,6 +30,25 @@ export function FloatingCartButton() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!lastAddedToCartAt) return;
+
+    let timerId: number | null = null;
+    const frameId = window.requestAnimationFrame(() => {
+      setIsAnimating(true);
+      timerId = window.setTimeout(() => {
+        setIsAnimating(false);
+      }, 800);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, [lastAddedToCartAt]);
+
   return (
     <AnimatePresence>
       {isVisible && !isCartOpen && totalItems > 0 && (
@@ -43,13 +63,13 @@ export function FloatingCartButton() {
         >
           <motion.div 
             className="relative"
-            animate={isCartVibrating ? { rotate: [0, -25, 25, -25, 25, 0], scale: [1, 1.3, 1] } : {}}
+            animate={isAnimating ? { rotate: [0, -25, 25, -25, 25, 0], scale: [1, 1.3, 1] } : {}}
             transition={{ duration: 0.8, ease: "easeInOut" }}
           >
             <ShoppingBag size={24} className="group-hover:animate-bounce" />
             <span className={cn(
               "absolute -top-3 -right-3 bg-black text-white text-[11px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-[var(--color-primary)] transition-colors duration-500",
-              isCartVibrating && "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.8)] border-white"
+              isAnimating && "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.8)] border-white"
             )}>
               {totalItems}
             </span>

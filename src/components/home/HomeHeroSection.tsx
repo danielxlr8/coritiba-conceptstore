@@ -21,6 +21,7 @@ import { WaveText } from "@/components/shared/WaveText";
 import { MagneticHover } from "@/components/shared/MagneticHover";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Package, ArrowRight, Wand2 } from "lucide-react";
+import FluidSmokeCursor from "@/components/shared/FluidSmokeCursor";
 
 const AiSizeGuideModal = dynamic(
   () =>
@@ -102,7 +103,6 @@ const HeroBackgroundLayer = memo(function HeroBackgroundLayer({
 
     let cancelled = false;
     let hasRevealed = false;
-    let loadTimer: number | undefined;
     let revealFrame: number | undefined;
 
     const revealVideo = () => {
@@ -128,7 +128,7 @@ const HeroBackgroundLayer = memo(function HeroBackgroundLayer({
     video.addEventListener("loadeddata", revealVideo, { once: true });
     video.addEventListener("canplay", revealVideo, { once: true });
 
-    loadTimer = window.setTimeout(startLoading, 900);
+    const loadTimer = window.setTimeout(startLoading, 900);
 
     return () => {
       cancelled = true;
@@ -269,12 +269,15 @@ export function HomeHeroSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-screen flex flex-col overflow-hidden bg-[#0A0A0A] text-white"
+      className="relative w-full min-h-screen flex flex-col overflow-hidden bg-[#0A0A0A] text-white [@media(pointer:fine)]:cursor-none"
     >
-      {/*  -� -� NATIVE VIDEO BACKGROUND  -� -� stays absolute, purely decorative */}
+      {/*  - - NATIVE VIDEO BACKGROUND  - - stays absolute, purely decorative */}
       <HeroBackgroundLayer containerRef={videoContainerRef} />
 
-      {/*  -� -� LAYOUT SHELL: flex-col fills the full viewport height  -� -� */}
+      {/*  - - WEBGL FLUID SMOKE CURSOR  - - contextual easter egg */}
+      <FluidSmokeCursor />
+
+      {/*  - - LAYOUT SHELL: flex-col fills the full viewport height  - - */}
       <div className="relative z-20 flex flex-col min-h-screen">
         {/* Top spacer  - pushes content below the navbar */}
         <div className="h-16 sm:h-20 shrink-0" aria-hidden="true" />

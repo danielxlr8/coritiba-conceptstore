@@ -152,6 +152,7 @@ export function MainNavbar() {
 
   // VIBRATION STATE
   const [favVibrating, setFavVibrating] = useState(false);
+  const [isCartAnimating, setIsCartAnimating] = useState(false);
 
   const cartItems = useShopStore((state) => state.cartItems);
   const favoriteItems = useShopStore((state) => state.favoriteItems);
@@ -159,7 +160,7 @@ export function MainNavbar() {
   const toggleFavoritesDrawer = useShopStore(
     (state) => state.toggleFavoritesDrawer,
   );
-  const isCartVibrating = useShopStore((state) => state.isCartVibrating);
+  const lastAddedToCartAt = useShopStore((state) => state.lastAddedToCartAt);
   const copy = navbarCopy[locale];
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -179,6 +180,25 @@ export function MainNavbar() {
       };
     }
   }, [favCount]);
+
+  useEffect(() => {
+    if (!lastAddedToCartAt) return;
+
+    let timerId: number | null = null;
+    const frameId = window.requestAnimationFrame(() => {
+      setIsCartAnimating(true);
+      timerId = window.setTimeout(() => {
+        setIsCartAnimating(false);
+      }, 800);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, [lastAddedToCartAt]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -363,7 +383,7 @@ export function MainNavbar() {
           >
             <motion.div
               animate={
-                isCartVibrating
+                isCartAnimating
                   ? // On add-to-cart: strong rapid shake
                     { rotate: [0, -20, 20, -20, 20, 0], scale: [1, 1.2, 1] }
                   : // When cart has items: periodic gentle swing like a phone notification
@@ -372,7 +392,7 @@ export function MainNavbar() {
                     : {}
               }
               transition={
-                isCartVibrating
+                isCartAnimating
                   ? { duration: 0.8, ease: "easeInOut" }
                   : cartCount > 0
                     ? {
@@ -390,7 +410,7 @@ export function MainNavbar() {
                 strokeWidth={2.5}
                 className={cn(
                   "transition-colors",
-                  isCartVibrating &&
+                  isCartAnimating &&
                     "text-[var(--color-primary)] drop-shadow-[0_0_12px_rgba(96,232,97,0.8)]",
                 )}
               />
@@ -403,7 +423,7 @@ export function MainNavbar() {
                   exit={{ scale: 0, opacity: 0 }}
                   className={cn(
                     "absolute -top-2 -right-2 text-[11px] font-bold h-[18px] w-[18px] rounded-full flex items-center justify-center pointer-events-none shadow-sm transition-colors duration-500",
-                    isCartVibrating
+                    isCartAnimating
                       ? "bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                       : "bg-[#5D8B6E] text-white",
                   )}
